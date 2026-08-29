@@ -1,0 +1,229 @@
+PCCST503 Assignment 1 - Safe Semantic Planner (D* Lite, C11)
+Effective weight  w(u,v) = cost + lambda*max(0,dSafe-clear(v))/dSafe + mu*(1-rel) + nu*(1-safety)
+Score(P) = 100*G - 1*C + 10*D + 1*R
+
+==========================================================
+  TEST 1 : Basic reachability      S -> A -> B -> G
+==========================================================
+  result             : SUCCESS
+  path               : S -> A -> B -> G
+  total cost         : 3.000
+  effective g(start) : 3.030
+  bad states visited : 0
+  min dist to bad    : n/a (B empty)
+  cum. reliability   : 2.940 (product 0.9411)
+  Score(P)           : 99.940
+  states expanded    : 4
+  heap operations    : 7
+  planning time      : 0.0004 ms
+  planner memory     : 0.1 KB
+  note               : unique valid path returned
+  optimality check   : PASS (Dijkstra = 3.030, D* Lite = 3.030)
+
+==========================================================
+  TEST 2 : Bad-state avoidance     S->A->X->G (X bad) vs S->C->D->G
+==========================================================
+  result             : SUCCESS
+  path               : S -> C -> D -> G
+  total cost         : 3.600
+  effective g(start) : 3.645
+  bad states visited : 0
+  min dist to bad    : 2.000
+  cum. reliability   : 2.910 (product 0.9127)
+  Score(P)           : 119.310
+  states expanded    : 4
+  heap operations    : 7
+  planning time      : 0.0003 ms
+  planner memory     : 0.1 KB
+  note               : cheaper path through X rejected
+  optimality check   : PASS (Dijkstra = 3.645, D* Lite = 3.645)
+  -- bad-state set updated at run time: B = {} (X cleared) --
+  result             : SUCCESS
+  path               : S -> A -> X -> G
+  total cost         : 3.000
+  effective g(start) : 3.015
+  bad states visited : 0
+  min dist to bad    : n/a (B empty)
+  cum. reliability   : 2.970 (product 0.9703)
+  Score(P)           : 99.970
+  states expanded    : 3
+  heap operations    : 5
+  planning time      : 0.0023 ms
+  planner memory     : 0.1 KB
+  note               : cheaper route re-adopted
+  optimality check   : PASS (Dijkstra = 3.015, D* Lite = 3.015)
+  -- bad-state set updated again: B = {C} --
+  result             : SUCCESS
+  path               : S -> A -> X -> G
+  total cost         : 3.000
+  effective g(start) : 3.015
+  bad states visited : 0
+  min dist to bad    : 1.414
+  cum. reliability   : 2.970 (product 0.9703)
+  Score(P)           : 114.112
+  states expanded    : 0
+  heap operations    : 0
+  planning time      : 0.0001 ms
+  planner memory     : 0.1 KB
+  note               : lower branch now unusable
+  optimality check   : PASS (Dijkstra = 3.015, D* Lite = 3.015)
+
+==========================================================
+  TEST 3 : Safety margin           cost-vs-clearance trade-off
+==========================================================
+  -- lambda = 0.0 (cost only) --
+  result             : SUCCESS
+  path               : S -> P1 -> P2 -> G
+  total cost         : 3.000
+  effective g(start) : 3.015
+  bad states visited : 0
+  min dist to bad    : 1.077
+  cum. reliability   : 2.970 (product 0.9703)
+  Score(P)           : 110.740
+  states expanded    : 4
+  heap operations    : 8
+  planning time      : 0.0005 ms
+  planner memory     : 0.1 KB
+  note               : shortest but least clearance
+  optimality check   : PASS (Dijkstra = 3.015, D* Lite = 3.015)
+  -- lambda = 6.0, dSafe = 3.5 (safety weighted) --
+  result             : SUCCESS
+  path               : S -> Q1 -> Q2 -> G
+  total cost         : 4.800
+  effective g(start) : 6.830
+  bad states visited : 0
+  min dist to bad    : 3.000
+  cum. reliability   : 2.970 (product 0.9703)
+  Score(P)           : 128.170
+  states expanded    : 5
+  heap operations    : 10
+  planning time      : 0.0004 ms
+  planner memory     : 0.1 KB
+  note               : longer route, larger margin
+  optimality check   : PASS (Dijkstra = 6.830, D* Lite = 6.830)
+
+==========================================================
+  TEST 4 : Dynamic transition      (A,G) becomes unavailable mid-run
+==========================================================
+  -- initial plan --
+  result             : SUCCESS
+  path               : S -> A -> G
+  total cost         : 3.000
+  effective g(start) : 3.030
+  bad states visited : 0
+  min dist to bad    : n/a (B empty)
+  cum. reliability   : 1.940 (product 0.9405)
+  Score(P)           : 98.940
+  states expanded    : 4
+  heap operations    : 10
+  planning time      : 0.0005 ms
+  planner memory     : 0.1 KB
+  note               : nominal route
+  -- agent executes S -> A, then edge (A,G) is blocked --
+  result             : SUCCESS
+  path               : A -> D -> G
+  total cost         : 2.200
+  effective g(start) : 2.240
+  bad states visited : 0
+  min dist to bad    : n/a (B empty)
+  cum. reliability   : 1.920 (product 0.9216)
+  Score(P)           : 99.720
+  states expanded    : 2
+  heap operations    : 6
+  planning time      : 0.0005 ms
+  planner memory     : 0.1 KB
+  note               : incremental repair from A
+  optimality check   : PASS (Dijkstra = 2.240, D* Lite = 2.240)
+
+==========================================================
+  TEST 5 : Goal update             goal moves from G1 to G2
+==========================================================
+  -- goal = G1 --
+  result             : SUCCESS
+  path               : S -> A -> G1
+  total cost         : 2.000
+  effective g(start) : 2.010
+  bad states visited : 0
+  min dist to bad    : n/a (B empty)
+  cum. reliability   : 1.980 (product 0.9801)
+  Score(P)           : 99.980
+  states expanded    : 3
+  heap operations    : 5
+  planning time      : 0.0002 ms
+  planner memory     : 0.1 KB
+  -- goal switched to G2 (graph, geometry, clearances, heap buffers reused) --
+  result             : SUCCESS
+  path               : S -> A -> B -> G2
+  total cost         : 3.000
+  effective g(start) : 3.025
+  bad states visited : 0
+  min dist to bad    : n/a (B empty)
+  cum. reliability   : 2.950 (product 0.9508)
+  Score(P)           : 99.950
+  states expanded    : 4
+  heap operations    : 7
+  planning time      : 0.0002 ms
+  planner memory     : 0.1 KB
+  note               : O(n) reset, zero reallocation
+  optimality check   : PASS (Dijkstra = 3.025, D* Lite = 3.025)
+
+==========================================================
+  TEST 6 : Transition addition     shortcut S->B inserted at run time
+==========================================================
+  -- before insertion --
+  result             : SUCCESS
+  path               : S -> A -> B -> G
+  total cost         : 3.000
+  effective g(start) : 3.015
+  bad states visited : 0
+  min dist to bad    : n/a (B empty)
+  cum. reliability   : 2.970 (product 0.9703)
+  Score(P)           : 99.970
+  states expanded    : 4
+  heap operations    : 7
+  planning time      : 0.0001 ms
+  planner memory     : 0.1 KB
+  -- inserting shortcut (S,B) with cost 0.5 --
+  result             : SUCCESS
+  path               : S -> B -> G
+  total cost         : 1.500
+  effective g(start) : 1.510
+  bad states visited : 0
+  min dist to bad    : n/a (B empty)
+  cum. reliability   : 1.980 (product 0.9801)
+  Score(P)           : 100.480
+  states expanded    : 1
+  heap operations    : 1
+  planning time      : 0.0001 ms
+  planner memory     : 0.1 KB
+  note               : improved solution discovered
+  optimality check   : PASS (Dijkstra = 1.510, D* Lite = 1.510)
+
+==========================================================
+  BENCHMARK : 150 x 150 8-connected lattice, 22500 states, 178808 transitions
+==========================================================
+  -- initial plan --
+  result             : SUCCESS, 156 states on path
+  total cost         : 222.364
+  min dist to bad    : 2.828
+  states expanded    : 6169 of 22500
+  planning time      : 4.543 ms (setup 8.095 ms incl. clearance field)
+  memory             : 12942.7 KB graph + 616.7 KB planner
+  -- heuristic ablation: same plan with h = 0 --
+  states expanded    : 22380 (vs 6169 with the Euclidean heuristic)
+  planning time      : 15.761 ms
+  -- 300 transitions removed, incremental repair --
+  g(start)           : 223.825  (was 223.825)
+  states expanded    : 1259
+  replanning time    : 0.852 ms
+  -- same query replanned from scratch --
+  g(start)           : 223.825
+  states expanded    : 6146
+  planning time      : 3.945 ms
+  agreement          : identical cost - incremental repair is exact
+  speed-up           : 4.88x fewer expansions, 4.63x faster
+
+----------------------------------------------------------
+peak tracked heap usage : 14560.8 KB
+leaked bytes at exit    : 0
+----------------------------------------------------------
